@@ -114,3 +114,8 @@ flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
   image_path: "assets/vioraAssets/logo/app_icon.png"
+
+  # Adaptive icons (Android 8.0+) ke liye setting:
+  # Hum background color wahi navy blue rakhenge jo aapki image ka hai
+  adaptive_icon_background: "#0a0f24" 
+  adaptive_icon_foreground: "assets/vioraAssets/dashboaard/home_Energy_app_icon.png"

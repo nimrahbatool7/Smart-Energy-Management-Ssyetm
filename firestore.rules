@@ -1,0 +1,52 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper: is the request authenticated as this user?
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    // ── User root document ────────────────────────────────────────────────────
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+
+      // Home setup — full CRUD for owner
+      match /home {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Appliances — full CRUD for owner only
+      match /appliances/{docId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Usage logs — user can READ, only Cloud Functions can WRITE
+      match /usageLogs/{docId} {
+        allow read: if isOwner(userId);
+        allow write: if false;
+      }
+
+      // Daily summaries — read only for owner
+      match /dailySummary/{date} {
+        allow read: if isOwner(userId);
+        allow write: if false;
+      }
+
+      // Alerts — read for owner, user can mark as read only
+      match /alerts/{alertId} {
+        allow read: if isOwner(userId);
+        // Allow user to update ONLY the 'read' field
+        allow update: if isOwner(userId)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+        allow create, delete: if false; // Only Cloud Functions
+      }
+
+      // AI Insights — read only for owner
+      match /insights/{insightId} {
+        allow read: if isOwner(userId);
+        allow write: if false;
+      }
+    }
+  }
+}

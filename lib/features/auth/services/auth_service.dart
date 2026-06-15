@@ -3,6 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../../core/config/app_config.dart';
 
 class AuthService extends GetxService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -18,8 +20,8 @@ class AuthService extends GetxService {
     currentUser.bindStream(_auth.authStateChanges());
   }
 
-  String? get uid => _auth.currentUser?.uid;
-  bool get isLoggedIn => _auth.currentUser != null;
+  String? get uid => AppConfig.skipAuthentication ? AppConfig.mockUserUid : _auth.currentUser?.uid;
+  bool get isLoggedIn => AppConfig.skipAuthentication ? true : _auth.currentUser != null;
 
   // ─── Google Sign In ───────────────────────────────────────────────────────
   Future<UserCredential?> signInWithGoogle() async {
@@ -80,7 +82,14 @@ class AuthService extends GetxService {
   Future<void> signOut() async {
     await _googleSignIn.signOut();
     await _auth.signOut();
-    Get.offAllNamed('/login');
+    if (AppConfig.skipAuthentication) {
+      // Clear onboarding completed flag in SharedPreferences so we can test the whole flow
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('onboarding_completed');
+      Get.offAllNamed('/onboarding');
+    } else {
+      Get.offAllNamed('/login');
+    }
   }
 
   // ─── Internal: Create Firestore User Document ─────────────────────────────

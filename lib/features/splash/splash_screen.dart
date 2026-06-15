@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../app/routes.dart';
 import '../../core/constants/colors.dart';
 import '../../core/constants/strings.dart';
@@ -41,14 +42,23 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
       CurvedAnimation(parent: _waveController, curve: Curves.easeOutQuad),
     );
 
-    Future.delayed(const Duration(seconds: 3), () {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        Get.offNamed(AppRoutes.dashboard);
+    _navigateToNext();
+  }
+
+  Future<void> _navigateToNext() async {
+    await Future.delayed(const Duration(seconds: 3));
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      Get.offNamed(AppRoutes.dashboard);
+    } else {
+      final prefs = await SharedPreferences.getInstance();
+      final onboardingCompleted = prefs.getBool('onboarding_completed') ?? false;
+      if (onboardingCompleted) {
+        Get.offNamed(AppRoutes.login);
       } else {
         Get.offNamed(AppRoutes.onboarding);
       }
-    });
+    }
   }
 
   @override

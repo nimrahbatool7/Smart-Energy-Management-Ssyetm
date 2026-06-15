@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/constants/colors.dart';
 import '../../../core/widgets/glass_card.dart';
 import '../services/auth_service.dart';
@@ -39,7 +40,15 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     setState(() => _loading = true);
     final auth = Get.find<AuthService>();
     final result = await auth.signInWithGoogle();
-    if (result != null) Get.offAllNamed('/dashboard');
+    if (result != null) {
+      final uid = result.user?.uid;
+      final homeDoc = await FirebaseFirestore.instance.doc('users/$uid/home').get();
+      if (homeDoc.exists) {
+        Get.offAllNamed('/dashboard');
+      } else {
+        Get.offAllNamed('/homeSetup');
+      }
+    }
     if (mounted) setState(() => _loading = false);
   }
 
@@ -48,7 +57,15 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     setState(() => _loading = true);
     final auth = Get.find<AuthService>();
     final result = await auth.signInWithEmail(_emailCtrl.text.trim(), _passCtrl.text);
-    if (result != null) Get.offAllNamed('/dashboard');
+    if (result != null) {
+      final uid = result.user?.uid;
+      final homeDoc = await FirebaseFirestore.instance.doc('users/$uid/home').get();
+      if (homeDoc.exists) {
+        Get.offAllNamed('/dashboard');
+      } else {
+        Get.offAllNamed('/homeSetup');
+      }
+    }
     if (mounted) setState(() => _loading = false);
   }
 

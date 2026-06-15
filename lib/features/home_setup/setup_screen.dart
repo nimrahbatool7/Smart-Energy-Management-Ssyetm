@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../app/routes.dart';
 import '../../core/constants/colors.dart';
 import '../../core/widgets/glass_card.dart';
 import '../../core/widgets/neon_button.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../core/config/app_config.dart';
+import '../auth/services/auth_service.dart';
 
 class SetupScreen extends StatefulWidget {
   const SetupScreen({super.key});
@@ -17,12 +21,56 @@ class _SetupScreenState extends State<SetupScreen> {
   int _people = 2;
   double _budget = 5000;
   double _unitCost = 15;
+  bool _loading = false;
+
+  Future<void> _saveSetupAndContinue() async {
+    setState(() => _loading = true);
+    try {
+      final uid = Get.find<AuthService>().uid;
+      if (uid != null && uid.isNotEmpty) {
+        await FirebaseFirestore.instance.collection('users').doc(uid).set({
+          'homeType': _homeType,
+          'peopleCount': _people,
+          'monthlyBudget': _budget,
+          'unitPrice': _unitCost,
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('setup_completed', true);
+        Get.offAllNamed(AppRoutes.dashboard);
+      } else {
+        Get.snackbar('Error', 'User not authenticated',
+            backgroundColor: const Color(0xFFFF4444),
+            colorText: const Color(0xFFFFFFFF));
+      }
+    } catch (e) {
+      Get.snackbar('Error saving setup', e.toString(),
+          backgroundColor: const Color(0xFFFF4444),
+          colorText: const Color(0xFFFFFFFF));
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Setup Smart Home'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            if (Navigator.canPop(context)) {
+              Get.back();
+            } else {
+              if (AppConfig.skipAuthentication) {
+                Get.offAllNamed(AppRoutes.onboarding);
+              } else {
+                Get.offAllNamed(AppRoutes.login);
+              }
+            }
+          },
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
@@ -125,10 +173,12 @@ class _SetupScreenState extends State<SetupScreen> {
             
             SizedBox(
               width: double.infinity,
-              child: NeonButton(
-                text: 'Continue',
-                onPressed: () => Get.offNamed(AppRoutes.dashboard),
-              ),
+              child: _loading
+                  ? const Center(child: CircularProgressIndicator(color: VioraColors.energyGlow))
+                  : NeonButton(
+                      text: 'Continue',
+                      onPressed: _saveSetupAndContinue,
+                    ),
             ),
             const SizedBox(height: 32),
           ],
@@ -139,17 +189,41 @@ class _SetupScreenState extends State<SetupScreen> {
 
   Widget _buildHomeTypeCard(String type, IconData icon) {
     bool isSelected = _homeType == type;
-    return GestureDetector(
+    return GlassCard(
+      isSelected: isSelected,
+      glowColor: isSelected ? VioraColors.energyGlow : Colors.transparent,
       onTap: () => setState(() => _homeType = type),
-      child: GlassCard(
-        glowColor: isSelected ? VioraColors.energyGlow : Colors.transparent,
-        child: Column(
-          children: [
-            Icon(icon, size: 40, color: isSelected ? VioraColors.energyGlow : VioraColors.textSecondary),
-            const SizedBox(height: 8),
-            Text(type, style: TextStyle(color: isSelected ? Colors.white : VioraColors.textSecondary)),
-          ],
-        ),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          if (isSelected)
+            Positioned(
+              top: 0,
+              right: 0,
+              child: Container(
+                padding: const EdgeInsets.all(2),
+                decoration: const BoxDecoration(
+                  color: VioraColors.energyGlow,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.check, color: VioraColors.primaryBackground, size: 12),
+              ),
+            ),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 40, color: isSelected ? VioraColors.energyGlow : VioraColors.textSecondary),
+              const SizedBox(height: 8),
+              Text(
+                type,
+                style: TextStyle(
+                  color: isSelected ? Colors.white : VioraColors.textSecondary,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

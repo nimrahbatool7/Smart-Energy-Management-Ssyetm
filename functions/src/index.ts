@@ -9,7 +9,7 @@ const db = admin.firestore();
 // ─────────────────────────────────────────────────────────────────────────────
 export const onApplianceWrite = functions.firestore
   .document("users/{userId}/appliances/{applianceId}")
-  .onWrite(async (change, context) => {
+  .onWrite(async (change: functions.Change<functions.firestore.DocumentSnapshot>, context: functions.EventContext) => {
     const { userId, applianceId } = context.params;
 
     // If deleted, skip
@@ -21,7 +21,7 @@ export const onApplianceWrite = functions.firestore
     const quantity: number = data.quantity ?? 1;
 
     // Get unit price from home settings
-    const homeDoc = await db.doc(`users/${userId}/home`).get();
+    const homeDoc = await db.doc(`users/${userId}`).get();
     const unitPrice: number = homeDoc.exists ? (homeDoc.data()!.unitPrice ?? 15) : 15;
 
     // Daily kWh per appliance
@@ -106,10 +106,10 @@ export const dailyAggregation = functions.pubsub
 // ─────────────────────────────────────────────────────────────────────────────
 export const budgetMonitor = functions.firestore
   .document("users/{userId}/usageLogs/{logId}")
-  .onCreate(async (snap, context) => {
+  .onCreate(async (snap: functions.firestore.QueryDocumentSnapshot, context: functions.EventContext) => {
     const { userId } = context.params;
 
-    const homeDoc = await db.doc(`users/${userId}/home`).get();
+    const homeDoc = await db.doc(`users/${userId}`).get();
     if (!homeDoc.exists) return null;
     const budget: number = homeDoc.data()!.monthlyBudget ?? 0;
     if (budget <= 0) return null;

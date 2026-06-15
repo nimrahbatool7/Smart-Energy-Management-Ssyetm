@@ -10,6 +10,7 @@ class GlassCard extends StatefulWidget {
   final EdgeInsetsGeometry padding;
   final VoidCallback? onTap;
   final Color? glowColor;
+  final bool isSelected;
 
   const GlassCard({
     super.key,
@@ -19,6 +20,7 @@ class GlassCard extends StatefulWidget {
     this.padding = const EdgeInsets.all(VioraSizes.p16),
     this.onTap,
     this.glowColor,
+    this.isSelected = false,
   });
 
   @override
@@ -30,6 +32,7 @@ class _GlassCardState extends State<GlassCard> {
 
   @override
   Widget build(BuildContext context) {
+    final active = widget.isSelected || _isHovered;
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
@@ -39,11 +42,11 @@ class _GlassCardState extends State<GlassCard> {
         onTapCancel: () => setState(() => _isHovered = false),
         onTap: widget.onTap,
         child: AnimatedScale(
-          scale: _isHovered ? 1.02 : 1.0,
+          scale: active ? 1.04 : 1.0,
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeOut,
           child: AnimatedSlide(
-            offset: _isHovered ? const Offset(0, -0.05) : Offset.zero,
+            offset: active ? const Offset(0, -0.03) : Offset.zero,
             duration: const Duration(milliseconds: 300),
             curve: Curves.easeOut,
             child: AnimatedContainer(
@@ -53,11 +56,11 @@ class _GlassCardState extends State<GlassCard> {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(VioraSizes.radius24),
                 boxShadow: [
-                  if (_isHovered)
+                  if (active)
                     BoxShadow(
-                      color: (widget.glowColor ?? VioraColors.energyGlow).withValues(alpha: 0.4),
-                      blurRadius: 24,
-                      spreadRadius: 3,
+                      color: (widget.glowColor ?? VioraColors.energyGlow).withValues(alpha: widget.isSelected ? 0.5 : 0.3),
+                      blurRadius: widget.isSelected ? 28 : 20,
+                      spreadRadius: widget.isSelected ? 3 : 2,
                     )
                   else
                     BoxShadow(
@@ -70,17 +73,17 @@ class _GlassCardState extends State<GlassCard> {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(VioraSizes.radius24),
                 child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: _isHovered ? 15.0 : 10.0, sigmaY: _isHovered ? 15.0 : 10.0),
+                  filter: ImageFilter.blur(sigmaX: active ? 15.0 : 10.0, sigmaY: active ? 15.0 : 10.0),
                   child: Container(
                     padding: widget.padding,
                     decoration: BoxDecoration(
                       color: VioraColors.glassBackground,
                       borderRadius: BorderRadius.circular(VioraSizes.radius24),
                       border: Border.all(
-                        color: _isHovered 
-                            ? (widget.glowColor ?? VioraColors.energyGlow).withValues(alpha: 0.7) 
+                        color: active
+                            ? (widget.glowColor ?? VioraColors.energyGlow).withValues(alpha: widget.isSelected ? 0.9 : 0.7)
                             : VioraColors.glassBorder,
-                        width: _isHovered ? 2.0 : 1.5,
+                        width: active ? 2.2 : 1.5,
                       ),
                     ),
                     child: widget.child,

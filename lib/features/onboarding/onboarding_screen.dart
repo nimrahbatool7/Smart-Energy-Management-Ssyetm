@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../app/routes.dart';
 import '../../core/constants/colors.dart';
 import '../../core/widgets/neon_button.dart';
@@ -133,7 +134,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             width: double.infinity,
                             child: NeonButton(
                               text: 'Get Started',
-                              onPressed: () => Get.offNamed(AppRoutes.login),
+                              onPressed: () async {
+                                final prefs = await SharedPreferences.getInstance();
+                                await prefs.setBool('onboarding_completed', true);
+                                Get.offNamed(AppRoutes.login);
+                              },
                             ),
                           )
                         : SizedBox(

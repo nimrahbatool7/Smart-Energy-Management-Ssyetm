@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../core/constants/colors.dart';
 import '../../../core/widgets/glass_card.dart';
+import '../../../app/routes.dart';
 import '../../../features/auth/services/auth_service.dart';
 import '../models/appliance_model.dart';
 import '../services/appliance_service.dart';

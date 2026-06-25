@@ -412,37 +412,6 @@ These files should remain local and be configured separately.
 
 ---
 
-# 🧮 Energy Calculation Logic
-
-
-## Energy Consumption
-
-
-```
-Consumption =
-(Wattage × Usage Hours) ÷ 1000
-```
-
-
-## Electricity Cost
-
-
-```
-Cost =
-Monthly Consumption × Unit Price
-```
-
-
-## Saving Potential
-
-
-```
-Saving =
-Current Cost - Optimized Cost
-```
-
-
----
 
 # 🚀 Future Enhancements
 
@@ -502,6 +471,3 @@ MIT License
 ---
 
 # 📸 Screenshots
-
-(Add your application screenshots below)
-

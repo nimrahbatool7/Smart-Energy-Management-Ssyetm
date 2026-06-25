@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../core/constants/colors.dart';
 import '../../../core/widgets/glass_card.dart';
+import '../../../core/config/app_config.dart';
 import '../services/auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -18,6 +19,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   bool _loading = false;
 
+  // 🔥 TEMP BYPASS (REMOVE LATER)
+  final bool debugBypassLogin = AppConfig.skipAuthentication;
+
   @override
   void dispose() {
     _nameCtrl.dispose();
@@ -27,8 +31,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Future<void> _register() async {
-    if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
+
+    // 🔥 BYPASS MODE
+    if (debugBypassLogin) {
+      await Future.delayed(const Duration(milliseconds: 300));
+      Get.offAllNamed('/dashboard');
+      if (mounted) setState(() => _loading = false);
+      return;
+    }
+
+    if (!_formKey.currentState!.validate()) return;
     final auth = Get.find<AuthService>();
     final result = await auth.registerWithEmail(_nameCtrl.text.trim(), _emailCtrl.text.trim(), _passCtrl.text);
     if (result != null) Get.offAllNamed('/homeSetup');
@@ -37,6 +50,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Future<void> _signInWithGoogle() async {
     setState(() => _loading = true);
+
+    // 🔥 BYPASS MODE
+    if (debugBypassLogin) {
+      await Future.delayed(const Duration(milliseconds: 300));
+      Get.offAllNamed('/dashboard');
+      if (mounted) setState(() => _loading = false);
+      return;
+    }
+
     final auth = Get.find<AuthService>();
     final result = await auth.signInWithGoogle();
     if (result != null) Get.offAllNamed('/homeSetup');

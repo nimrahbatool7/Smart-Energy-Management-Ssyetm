@@ -12,18 +12,27 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStateMixin {
+class _LoginScreenState extends State<LoginScreen>
+    with SingleTickerProviderStateMixin {
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+
   bool _loading = false;
+
+  // 🔥 TEMP BYPASS (REMOVE LATER)
+  final bool debugBypassLogin = true;
+
   late AnimationController _animCtrl;
   late Animation<double> _fadeIn;
 
   @override
   void initState() {
     super.initState();
-    _animCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 800));
+    _animCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
     _fadeIn = CurvedAnimation(parent: _animCtrl, curve: Curves.easeOut);
     _animCtrl.forward();
   }
@@ -38,34 +47,70 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
 
   Future<void> _signInWithGoogle() async {
     setState(() => _loading = true);
+
+    // 🔥 BYPASS MODE
+    if (debugBypassLogin) {
+      await Future.delayed(const Duration(milliseconds: 300));
+      Get.offAllNamed('/dashboard');
+      setState(() => _loading = false);
+      return;
+    }
+
     final auth = Get.find<AuthService>();
     final result = await auth.signInWithGoogle();
+
     if (result != null) {
       final uid = result.user?.uid;
-      final homeDoc = await FirebaseFirestore.instance.doc('users/$uid/home').get();
+
+      final homeDoc =
+          await FirebaseFirestore.instance.doc('users/$uid/home').get();
+
       if (homeDoc.exists) {
         Get.offAllNamed('/dashboard');
       } else {
         Get.offAllNamed('/homeSetup');
       }
     }
+
     if (mounted) setState(() => _loading = false);
   }
 
   Future<void> _signInWithEmail() async {
-    if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
+
+    // 🔥 BYPASS MODE
+    if (debugBypassLogin) {
+      await Future.delayed(const Duration(milliseconds: 300));
+      Get.offAllNamed('/dashboard');
+      setState(() => _loading = false);
+      return;
+    }
+
+    if (!_formKey.currentState!.validate()) {
+      setState(() => _loading = false);
+      return;
+    }
+
     final auth = Get.find<AuthService>();
-    final result = await auth.signInWithEmail(_emailCtrl.text.trim(), _passCtrl.text);
+
+    final result = await auth.signInWithEmail(
+      _emailCtrl.text.trim(),
+      _passCtrl.text,
+    );
+
     if (result != null) {
       final uid = result.user?.uid;
-      final homeDoc = await FirebaseFirestore.instance.doc('users/$uid/home').get();
+
+      final homeDoc =
+          await FirebaseFirestore.instance.doc('users/$uid/home').get();
+
       if (homeDoc.exists) {
         Get.offAllNamed('/dashboard');
       } else {
         Get.offAllNamed('/homeSetup');
       }
     }
+
     if (mounted) setState(() => _loading = false);
   }
 
@@ -75,28 +120,12 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // Background gradient
           Container(
             decoration: const BoxDecoration(
               gradient: RadialGradient(
                 center: Alignment.topCenter,
                 radius: 1.5,
                 colors: [Color(0xFF0D2E4D), VioraColors.primaryBackground],
-              ),
-            ),
-          ),
-
-          // Neon glow orb
-          Positioned(
-            top: -80, left: -80,
-            child: Container(
-              width: 300, height: 300,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(colors: [
-                  VioraColors.energyGlow.withValues(alpha: 0.2),
-                  Colors.transparent,
-                ]),
               ),
             ),
           ),
@@ -111,93 +140,78 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                   child: Column(
                     children: [
                       const SizedBox(height: 60),
-                      // Logo / Title
-                      Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(color: VioraColors.energyGlow, width: 2),
-                          boxShadow: [BoxShadow(color: VioraColors.energyGlow.withValues(alpha: 0.4), blurRadius: 30)],
-                          color: VioraColors.glassBackground,
+
+                      const Text(
+                        'VIORA',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 36,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 8,
                         ),
-                        child: const Icon(Icons.bolt, color: VioraColors.energyGlow, size: 48),
                       ),
-                      const SizedBox(height: 24),
-                      const Text('VIORA', style: TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.w900, letterSpacing: 8)),
-                      const Text('Smart Energy Intelligence', style: TextStyle(color: VioraColors.textSecondary, fontSize: 14, letterSpacing: 2)),
+
                       const SizedBox(height: 56),
 
-                      // Google Sign-In Button (PRIMARY)
+                      // GOOGLE BUTTON
                       GlassCard(
                         glowColor: VioraColors.energyGlow,
                         padding: EdgeInsets.zero,
                         onTap: _loading ? null : _signInWithGoogle,
-                        child: Container(
+                        child: SizedBox(
                           width: double.infinity,
-                          padding: const EdgeInsets.symmetric(vertical: 18),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              if (_loading)
-                                const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2, color: VioraColors.energyGlow))
-                              else ...[
-                                const Icon(Icons.g_mobiledata, color: Colors.white, size: 28),
-                                const SizedBox(width: 12),
-                                const Text('Continue with Google', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
-                              ],
-                            ],
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 18),
+                            child: Center(
+                              child: _loading
+                                  ? const CircularProgressIndicator()
+                                  : const Text(
+                                      'Continue with Google',
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                            ),
                           ),
                         ),
                       ),
 
                       const SizedBox(height: 24),
-                      const Row(children: [
-                        Expanded(child: Divider(color: VioraColors.glassBorder)),
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 16),
-                          child: Text('or', style: TextStyle(color: VioraColors.textSecondary)),
-                        ),
-                        Expanded(child: Divider(color: VioraColors.glassBorder)),
-                      ]),
-                      const SizedBox(height: 24),
 
-                      // Email field
-                      _buildField(controller: _emailCtrl, label: 'Email', icon: Icons.email_outlined,
-                        validator: (v) => v!.contains('@') ? null : 'Enter valid email'),
+                      _buildField(
+                        controller: _emailCtrl,
+                        label: 'Email',
+                        icon: Icons.email_outlined,
+                        validator: (v) =>
+                            v != null && v.contains('@')
+                                ? null
+                                : 'Invalid email',
+                      ),
+
                       const SizedBox(height: 16),
 
-                      // Password field
-                      _buildField(controller: _passCtrl, label: 'Password', icon: Icons.lock_outline,
+                      _buildField(
+                        controller: _passCtrl,
+                        label: 'Password',
+                        icon: Icons.lock_outline,
                         obscure: true,
-                        validator: (v) => v!.length >= 6 ? null : 'Min 6 characters'),
+                        validator: (v) =>
+                            v != null && v.length >= 6
+                                ? null
+                                : 'Min 6 characters',
+                      ),
+
                       const SizedBox(height: 32),
 
-                      // Login Button
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: _loading ? null : _signInWithEmail,
+                          onPressed:
+                              _loading ? null : _signInWithEmail,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: VioraColors.energyGlow,
-                            foregroundColor: VioraColors.primaryBackground,
                             padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                           ),
-                          child: const Text('Sign In', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                          child: const Text('Sign In'),
                         ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Register link
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text("Don't have an account? ", style: TextStyle(color: VioraColors.textSecondary)),
-                          GestureDetector(
-                            onTap: () => Get.toNamed('/register'),
-                            child: const Text('Sign Up', style: TextStyle(color: VioraColors.energyGlow, fontWeight: FontWeight.bold)),
-                          ),
-                        ],
                       ),
                     ],
                   ),
@@ -224,13 +238,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(color: VioraColors.textSecondary),
-        prefixIcon: Icon(icon, color: VioraColors.textSecondary),
-        filled: true,
-        fillColor: VioraColors.glassBackground,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: VioraColors.glassBorder)),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: VioraColors.glassBorder)),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: VioraColors.energyGlow, width: 2)),
+        prefixIcon: Icon(icon),
       ),
     );
   }

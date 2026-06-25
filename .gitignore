@@ -18,9 +18,8 @@ migrate_working_dir/
 *.iws
 .idea/
 
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
+# VS Code
+# Uncomment if you do not want VS Code settings uploaded
 #.vscode/
 
 # Flutter/Dart/Pub related
@@ -30,8 +29,8 @@ migrate_working_dir/
 .flutter-plugins-dependencies
 .pub-cache/
 .pub/
-/build/
-/coverage/
+ /build/
+ /coverage/
 
 # Symbolication related
 app.*.symbols
@@ -39,7 +38,70 @@ app.*.symbols
 # Obfuscation related
 app.*.map.json
 
-# Android Studio will place build artifacts here
+# Android build artifacts
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+
+# ==========================
+# Firebase Secret Files
+# ==========================
+
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+
+# Firebase Admin SDK private keys
+firebase-adminsdk*.json
+
+
+# ==========================
+# Environment Variables / API Keys
+# ==========================
+
+.env
+.env.*
+*.env
+
+# Secret files
+*.key
+*.pem
+*.secret
+
+
+# ==========================
+# Supabase
+# ==========================
+
+supabase/.env
+supabase/config.toml
+
+
+# ==========================
+# Generated Firebase files
+# ==========================
+
+lib/firebase_options.dart
+
+
+# ==========================
+# iOS dependencies
+# ==========================
+
+ios/Pods/
+ios/.symlinks/
+
+
+# ==========================
+# Android local files
+# ==========================
+
+android/local.properties
+android/.gradle/
+
+
+# ==========================
+# OS files
+# ==========================
+
+Thumbs.db
